@@ -164,7 +164,7 @@ SELECT dm.dept_no,
 	ce.last_name,
 	dm.from_date,
 	dm.to_date
---INTO manager_info
+INTO manager_info
 FROM dept_manager AS dm
 	INNER JOIN departments as d
 		ON (dm.dept_no = d.dept_no)
@@ -209,9 +209,9 @@ FROM dept_info as di
 WHERE di.dept_name IN ('Sales', 'Development');
 
 
--- Start of Challenge Code.
+--------------- Start of Challenge Code.
 
--- Deliverable 1.1 Get employee names, no, titles, from and to date
+-- Deliverable 1. Get employee names, no, titles, from and to date
 SELECT e.emp_no, 
 	e.first_name, 
 	e.last_name,
@@ -230,7 +230,7 @@ SELECT DISTINCT ON (rt.emp_no) rt.emp_no,
 	rt.first_name, 
 	rt.last_name,
 	rt.title
---INTO unique_titles	
+INTO unique_titles	
 FROM retirement_titles as rt
 WHERE rt.to_date = ('9999-01-01')
 ORDER BY rt.emp_no, rt.to_date DESC;
@@ -243,13 +243,88 @@ FROM unique_titles as ut
 GROUP BY ut.title
 ORDER BY COUNT DESC;
 
+-- Deliverable 2. Create a mentorship-eligibility table that holds the current employees who were born between January 1, 1965 and December 31, 1965.
+
+SELECT DISTINCT ON (e.emp_no) e.emp_no,
+	e.first_name, 
+	e.last_name,
+	e.birth_date,
+	de.from_date,
+	de.to_date,
+	ti.title
+INTO mentorship_eligibility
+FROM employees as e
+	INNER JOIN dept_emps as de
+		ON (e.emp_no = de.emp_no)
+	INNER JOIN titles as ti
+		ON (e.emp_no = ti.emp_no)
+WHERE (de.to_date = '9999-01-01')
+	AND (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31') 
+ORDER BY e.emp_no;
+
+SELECT * FROM mentorship_eligibility;
+
+--- Senior Staff Mentors
+SELECT DISTINCT ON (e.emp_no) e.emp_no,
+	e.first_name, 
+	e.last_name,
+	e.birth_date,
+	de.from_date,
+	de.to_date,
+	ti.title
+INTO senior_staff_mentors
+FROM employees as e
+	INNER JOIN dept_emps as de
+		ON (e.emp_no = de.emp_no)
+	INNER JOIN titles as ti
+		ON (e.emp_no = ti.emp_no)
+WHERE (de.to_date = '9999-01-01')
+	AND (e.birth_date BETWEEN '1965-01-01' AND '1965-12-31') 
+	AND ti.title IN ('Senior Staff', 'Senior Engineer')
+ORDER BY e.emp_no;
+
+
+--- Retirements by Dept
+
+SELECT e.emp_no,
+	e.first_name,
+	e.last_name,
+	e.birth_date,
+	de.dept_no,
+	de.to_date,
+	d.dept_name
+INTO retiree_depts
+FROM employees as e
+	INNER JOIN dept_emps as de
+		ON (e.emp_no = de.emp_no)
+	INNER JOIN departments as d
+		ON (de.dept_no = d.dept_no)
+WHERE (e.birth_date BETWEEN '1952-01-01' AND '1955-12-31')
+ORDER BY e.emp_no;
 
 
 
+-- Get only current employees who are retiring and their dept
+SELECT DISTINCT ON (rd.emp_no) rd.emp_no,
+	rd.first_name, 
+	rd.last_name,
+	rd.dept_name
+INTO retiree_current_depts
+FROM retiree_depts as rd
+WHERE rd.to_date = ('9999-01-01')
+ORDER BY rd.emp_no, rd.to_date DESC;
 
+--SELECT * FROM retiree_current_depts;
 
+-- Get a count of the number of employees who are retiring by dept
 
+SELECT COUNT(rcd.dept_name), rcd.dept_name 
+INTO dept_retiree_count
+FROM retiree_current_depts as rcd
+GROUP BY rcd.dept_name 
+ORDER BY COUNT DESC; 
 	
+
 
 
 
